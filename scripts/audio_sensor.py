@@ -21,8 +21,6 @@ if os.path.isdir('/opt/hansonrobotics/lib/python2.7/site-packages'):
 from pocketsphinx.pocketsphinx import *
 from sphinxbase.sphinxbase import *
 
-import webrtcvad
-
 MODELDIR = "/opt/hansonrobotics/share/pocketsphinx/model"
 
 logger = logging.getLogger('hr.audio_stream.audio_sensor')
@@ -38,7 +36,6 @@ class AudioSensor(object):
         self.decocer_config.set_string(
             '-dict', os.path.join(MODELDIR, 'en-us/cmudict-en-us.dict'))
         self.decoder = Decoder(self.decocer_config)
-        self.vad = webrtcvad.Vad()
 
         self.pub = rospy.Publisher(
             'audio_sensors', audiodata, queue_size=1)
@@ -47,9 +44,7 @@ class AudioSensor(object):
         self.d = deque(maxlen=5)
         self.freqs = deque(maxlen=5)
         self.rate = rospy.get_param('audio_rate', 16000)
-        self.speech = False
-        self.speech_buf = deque(maxlen=5)
-        self.chat_start = False
+        self.speech_buf = deque(maxlen=3)
 
         # https://en.wikipedia.org/wiki/Voice_frequency
         # The voiced speech of a typical adult male will have a fundamental
@@ -88,13 +83,6 @@ class AudioSensor(object):
                 return True
         return False
 
-    def vad_change_event(self):
-        if not self.speech:
-            self.speech_buf.clear()
-            if self.chat_start:
-                self.chat_event_pub.publish('speechstop')
-                self.chat_start = False
-
     def get_text(self):
         try:
             if self.speech_buf:
@@ -117,19 +105,12 @@ class AudioSensor(object):
         self.d.append(Decibel)
         self.freqs.append(freq)
 
-        frame = msg.data[:960] # 30ms
-        speech = self.vad.is_speech(frame, self.rate)
-        if self.speech != speech:
-            self.speech = speech
-            self.vad_change_event()
-        if self.speech:
-            self.speech_buf.append(msg.data)
-        if not self.speech or len(self.speech_buf) == self.speech_buf.maxlen:
+        self.speech_buf.append(msg.data)
+        if len(self.speech_buf) == self.speech_buf.maxlen:
             text = self.get_text()
             if text:
-                logger.info('Best hypothesis segments: {}'.format(text))
+                logger.info('Found text in the speech, "{}" '.format(text))
                 self.chat_event_pub.publish('speechstart:{}'.format(text))
-                self.chat_start = True
 
         msg2 = audiodata()
         msg2.Decibel = Decibel
