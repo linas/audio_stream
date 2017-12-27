@@ -35,6 +35,8 @@ class AudioSensor(object):
             '-lm', os.path.join(MODELDIR, 'en-us/en-us.lm.bin'))
         self.decocer_config.set_string(
             '-dict', os.path.join(MODELDIR, 'en-us/cmudict-en-us.dict'))
+        self.decocer_config.set_string(
+            '-logfn', '/dev/null')
         self.decoder = Decoder(self.decocer_config)
 
         self.pub = rospy.Publisher(
