@@ -13,28 +13,22 @@ import logging
 from std_msgs.msg import Float32, UInt8MultiArray, String
 from audio_stream.msg import audiodata
 from audio_stream.frequency_estimator import freq_from_fft
+from pocketsphinx import DefaultConfig, Decoder, get_model_path, get_data_path
 
-if os.path.isdir('/opt/hansonrobotics/lib/python2.7/site-packages'):
-    import sys
-    sys.path.insert(0, '/opt/hansonrobotics/lib/python2.7/site-packages')
-
-from pocketsphinx.pocketsphinx import *
-from sphinxbase.sphinxbase import *
-
-MODELDIR = "/opt/hansonrobotics/share/pocketsphinx/model"
+MODELDIR = "/opt/hansonrobotics/py2env/lib/python2.7/site-packages/pocketsphinx/model"
 
 logger = logging.getLogger('hr.audio_stream.audio_sensor')
 
 class AudioSensor(object):
 
     def __init__(self):
-        self.decocer_config = Decoder.default_config()
+        self.decocer_config = DefaultConfig()
         self.decocer_config.set_string(
-            '-hmm', os.path.join(MODELDIR, 'en-us/en-us'))
+            '-hmm', os.path.join(MODELDIR, 'en-us'))
         self.decocer_config.set_string(
-            '-lm', os.path.join(MODELDIR, 'en-us/en-us.lm.bin'))
+            '-lm', os.path.join(MODELDIR, 'en-us.lm.bin'))
         self.decocer_config.set_string(
-            '-dict', os.path.join(MODELDIR, 'en-us/cmudict-en-us.dict'))
+            '-dict', os.path.join(MODELDIR, 'cmudict-en-us.dict'))
         self.decocer_config.set_string(
             '-logfn', '/dev/null')
         self.decoder = Decoder(self.decocer_config)
