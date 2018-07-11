@@ -10,9 +10,9 @@ import wave
 import contextlib
 import logging
 
-from std_msgs.msg import Float32, UInt8MultiArray, String
-from audio_stream.msg import audiodata
 from audio_stream.frequency_estimator import freq_from_fft
+from hr_msgs.msg import audiodata
+from std_msgs.msg import Float32, UInt8MultiArray, String
 
 if os.path.isdir('/opt/hansonrobotics/lib/python2.7/site-packages'):
     import sys
